@@ -64,9 +64,9 @@ We envision expanding Sweet Swing from a simple range logger into a comprehensiv
 
 ### Installation
 
-1. Navigate to the project directory:
+1. Navigate to the project directory (cloned repository folder):
    ```bash
-   cd golf-tracker
+   cd sweet-swing
    ```
 
 2. Install dependencies:
