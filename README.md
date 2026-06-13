@@ -39,19 +39,25 @@ Sweet Swing automates golf self-assessment and makes range sessions productive a
 
 We envision expanding Sweet Swing from a simple range logger into a comprehensive digital golf coach. The next phases of development will introduce:
 
-### 1. 📹 AI Video Analysis (Swing Mechanics)
+### 1. 📊 Google Sheets Cloud Sync (Cross-Device Database)
+* **Google OAuth Sign-In**: Secure login using Google identity credentials.
+* **Google Drive Integration**: Automatically creates a private `Sweet Swing Logbook` spreadsheet in your Google Drive.
+* **Auto-Sync Logbook**: Appends range sessions and raw shot logs directly to Google Sheets, enabling cross-device sync (view phone logs on desktop) and spreadsheet custom calculations.
+
+### 2. 📹 AI Video Analysis (Swing Mechanics)
 * **Local Joint Tracking**: Incorporate *Google MediaPipe* in-browser to trace your wrists, shoulders, hips, and knees. The app will visually overlay your swing plane, detect head sway, and critique your posture angles.
 * **Gemini Coach Integration**: Allow quick video uploads to get a detailed AI swing analysis text critique: identifying setup errors, backswing release issues, and follow-through balance.
 
-### 2. 🏌️‍♂️ Play Mode (On-Course Scorecard & Analytics)
+### 3. 🏌️‍♂️ Play Mode (On-Course Scorecard & Analytics)
 * **Round Statistics Log**: Log actual golf rounds hole-by-hole, tracking strokes, Putts per Hole, Green in Regulation (GIR), and Fairways Hit (Off the Tee).
 * **Range-to-Course Correlation**: Connect range metrics with on-course performance: *"On the range, you slice 40% of Driver shots. In today's round, you missed 5 fairways to the right. Try the Headcover Armpit Drill before your next tee time."*
 * **Club Average Yardage Matrix**: Aggregates only your *pure* contact shots to map out exactly how far you hit each club.
 
-### 3. 🗺️ GPS Rangefinder & Hole Mapping (Course Intelligence)
+### 4. 🗺️ GPS Rangefinder & Hole Mapping (Course Intelligence)
 * **Live Satellite Rangefinder**: Integrates with Mapbox or Google Maps Satellite view, using your phone’s browser GPS coordinates to show your exact position on the hole and dynamic yardage distance to the center of the green.
 * **Tap-to-Plot Shot Log**: Plot your exact landing locations on the map as you walk the course, automatically measuring your shot distances (e.g. tracking a 230-yard drive).
 * **Landing Heatmaps**: Aggregates multiple rounds on the same course to display visual shot-dispersion heatmaps over each hole layout, highlighting where you routinely miss or clear hazards.
+
 
 
 ---
