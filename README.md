@@ -1,6 +1,6 @@
-# SwingSync ⛳ // Golf Swing Tracker & Performance Analyzer
+# Sweet Swing ⛳ // Golf Swing Tracker & Performance Analyzer
 
-*SwingSync* is a modern, responsive, mobile-first golf practice companion designed for range players to log shots, calculate strike consistency ratios, and get custom diagnostic feedback to improve their swings.
+*Sweet Swing* is a modern, responsive, mobile-first golf practice companion designed for range players to log shots, calculate strike consistency ratios, and get custom diagnostic feedback to improve their swings.
 
 Everything runs 100% locally in your browser to respect your data privacy.
 
@@ -17,7 +17,7 @@ Improving your golf swing requires consistent practice, but standard driving ran
 
 ## 🚀 The Solution: Beginner-Friendly Practice
 
-SwingSync automates golf self-assessment and makes range sessions productive and structured:
+Sweet Swing automates golf self-assessment and makes range sessions productive and structured:
 * **Glove-Friendly, One-Tap Input**: Log shots in under **2 seconds** between swings. No typing required.
 * **Built-in Keywords**: Button labels include simple keyword helpers (e.g., *Fat* ➔ *Hit turf first*, *Draw* ➔ *Right-to-left curve*) so you don’t have to memorize complex ball flights.
 * **Instant Ratios**: Get live contact quality percentages (e.g., *72% Sweet Spot*) as you swing.
@@ -37,7 +37,7 @@ SwingSync automates golf self-assessment and makes range sessions productive and
 
 ## 🔮 The Roadmap: Future Expansion
 
-We envision expanding SwingSync from a simple range logger into a comprehensive digital golf coach. The next phases of development will introduce:
+We envision expanding Sweet Swing from a simple range logger into a comprehensive digital golf coach. The next phases of development will introduce:
 
 ### 1. 📹 AI Video Analysis (Swing Mechanics)
 * **Local Joint Tracking**: Incorporate *Google MediaPipe* in-browser to trace your wrists, shoulders, hips, and knees. The app will visually overlay your swing plane, detect head sway, and critique your posture angles.

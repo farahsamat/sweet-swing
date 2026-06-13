@@ -64,7 +64,7 @@ export default function Dashboard({ sessions, onStartSession, activeSession, onN
             Practice Smart, Hit Purer
           </h1>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '600px', fontSize: '1rem', lineHeight: '1.5' }}>
-            Track your swing contact feel and ball flight directions. SwingSync will automatically calculate your sweet-spot hit percentage and diagnose swing errors.
+            Track your swing contact feel and ball flight directions. Sweet Swing will automatically calculate your sweet-spot hit percentage and diagnose swing errors.
           </p>
         </div>
         <div>

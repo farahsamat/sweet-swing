@@ -13,12 +13,12 @@ export default function App() {
   // Load initial data from localStorage
   useEffect(() => {
     try {
-      const storedSessions = localStorage.getItem('swingsync_sessions');
+      const storedSessions = localStorage.getItem('sweetswing_sessions');
       if (storedSessions) {
         setSessions(JSON.parse(storedSessions));
       }
       
-      const storedActive = localStorage.getItem('swingsync_active_session');
+      const storedActive = localStorage.getItem('sweetswing_active_session');
       if (storedActive) {
         setActiveSession(JSON.parse(storedActive));
         setCurrentView('active-session'); // Resume active session
@@ -31,16 +31,16 @@ export default function App() {
   // Sync sessions to localStorage
   const saveSessions = (updatedSessions) => {
     setSessions(updatedSessions);
-    localStorage.setItem('swingsync_sessions', JSON.stringify(updatedSessions));
+    localStorage.setItem('sweetswing_sessions', JSON.stringify(updatedSessions));
   };
 
   // Sync active session to localStorage
   const updateActiveSession = (updatedActive) => {
     setActiveSession(updatedActive);
     if (updatedActive) {
-      localStorage.setItem('swingsync_active_session', JSON.stringify(updatedActive));
+      localStorage.setItem('sweetswing_active_session', JSON.stringify(updatedActive));
     } else {
-      localStorage.removeItem('swingsync_active_session');
+      localStorage.removeItem('sweetswing_active_session');
     }
   };
 
@@ -128,7 +128,7 @@ export default function App() {
             className="brand cursor-pointer"
             onClick={() => setCurrentView(activeSession ? 'active-session' : 'dashboard')}
           >
-            SwingSync <span>// Range Assistant</span>
+            Sweet Swing <span>// Range Assistant</span>
           </div>
 
           <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -241,7 +241,7 @@ export default function App() {
 
       {/* Footer */}
       <footer style={{ borderTop: '1px solid var(--border-slate)', padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '40px' }}>
-        SwingSync Golf Tracker &bull; 100% Local Practice Sandboxed Data Privacy
+        Sweet Swing Golf Tracker &bull; 100% Local Practice Sandboxed Data Privacy
       </footer>
     </div>
   );
