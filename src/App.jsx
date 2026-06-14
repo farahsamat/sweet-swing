@@ -59,6 +59,16 @@ export default function App() {
   // Log a shot in the active session
   const handleLogShot = (shot) => {
     if (!activeSession) return;
+    
+    if (shot.changeClubOnly) {
+      const updatedActive = {
+        ...activeSession,
+        currentClub: shot.club
+      };
+      updateActiveSession(updatedActive);
+      return;
+    }
+
     const updatedShots = [...activeSession.shots, { ...shot, id: Date.now() }];
     const updatedActive = {
       ...activeSession,

@@ -146,7 +146,7 @@ export default function SessionLogger({
                     borderColor: activeSession.currentClub === clubName ? 'var(--color-primary)' : 'var(--border-slate)',
                     minWidth: '55px'
                   }}
-                  onClick={() => onLogShot({ ...activeSession.shots[activeSession.shots.length - 1], club: clubName, changeClubOnly: true })}
+                  onClick={() => onLogShot({ club: clubName, changeClubOnly: true })}
                 >
                   {clubName}
                 </button>
