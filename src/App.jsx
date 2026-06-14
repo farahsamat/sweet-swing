@@ -3,7 +3,8 @@ import Dashboard from './components/Dashboard.jsx';
 import SessionLogger from './components/SessionLogger.jsx';
 import SwingCoach from './components/SwingCoach.jsx';
 import SessionHistory from './components/SessionHistory.jsx';
-import { History, Activity, Dumbbell } from 'lucide-react';
+import Profile from './components/Profile.jsx';
+import { History, Activity, Dumbbell, User } from 'lucide-react';
 import { 
   searchLogbookFile, 
   createLogbookFile, 
@@ -24,6 +25,16 @@ export default function App() {
   const [googleSpreadsheetId, setGoogleSpreadsheetId] = useState('');
   const [syncStatus, setSyncStatus] = useState('idle'); // 'idle' | 'syncing' | 'success' | 'error'
   const [syncMessage, setSyncMessage] = useState('');
+
+  // User Profile States
+  const [golferName, setGolferName] = useState('Reva Golfer');
+  const [handicap, setHandicap] = useState('28.0');
+  const [homeCourse, setHomeCourse] = useState('Local Course');
+  const [activeClubs, setActiveClubs] = useState([
+    'Driver', '3-Wood', '5-Hybrid', '6-Hybrid', 
+    '7-Iron', '8-Iron', '9-Iron', 
+    'PW', 'SW', 'Putter'
+  ]);
 
   // Load initial data from localStorage
   useEffect(() => {
@@ -52,6 +63,28 @@ export default function App() {
       if (storedUser) {
         setGoogleUser(JSON.parse(storedUser));
       }
+
+      // Load User Profile details
+      const storedName = localStorage.getItem('sweetswing_golfer_name');
+      if (storedName) {
+        setGolferName(storedName);
+      }
+      const storedHandicap = localStorage.getItem('sweetswing_handicap');
+      if (storedHandicap) {
+        setHandicap(storedHandicap);
+      }
+      const storedCourse = localStorage.getItem('sweetswing_home_course');
+      if (storedCourse) {
+        setHomeCourse(storedCourse);
+      }
+      const storedClubs = localStorage.getItem('sweetswing_active_clubs');
+      if (storedClubs) {
+        try {
+          setActiveClubs(JSON.parse(storedClubs));
+        } catch (err) {
+          console.error('Failed to parse active clubs:', err);
+        }
+      }
     } catch (e) {
       console.error('Failed to load localStorage data:', e);
     }
@@ -73,13 +106,35 @@ export default function App() {
     }
   };
 
+  // Profile update handlers
+  const handleSetGolferName = (name) => {
+    setGolferName(name);
+    localStorage.setItem('sweetswing_golfer_name', name);
+  };
+
+  const handleSetHandicap = (hc) => {
+    setHandicap(hc);
+    localStorage.setItem('sweetswing_handicap', hc);
+  };
+
+  const handleSetHomeCourse = (course) => {
+    setHomeCourse(course);
+    localStorage.setItem('sweetswing_home_course', course);
+  };
+
+  const handleSetActiveClubs = (clubs) => {
+    setActiveClubs(clubs);
+    localStorage.setItem('sweetswing_active_clubs', JSON.stringify(clubs));
+  };
+
   // Start new practice session
   const handleStartSession = () => {
+    const defaultClub = activeClubs.includes('7-Iron') ? '7-Iron' : (activeClubs[0] || 'Driver');
     const newSession = {
       id: Date.now(),
       startTime: new Date().toISOString(),
       shots: [],
-      currentClub: '7-Iron'
+      currentClub: defaultClub
     };
     updateActiveSession(newSession);
     setCurrentView('active-session');
@@ -449,6 +504,22 @@ export default function App() {
               <Dumbbell size={14} style={{ color: currentView === 'coach' ? 'var(--color-primary)' : 'inherit' }} />
               <span className="nav-text">Coach</span>
             </button>
+
+            <button 
+              className={`btn btn-secondary ${currentView === 'profile' ? 'active' : ''}`}
+              style={{ 
+                padding: '6px 12px', 
+                fontSize: '0.85rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                borderColor: currentView === 'profile' ? 'var(--color-primary)' : 'var(--border-slate)'
+              }}
+              onClick={() => setCurrentView('profile')}
+            >
+              <User size={14} style={{ color: currentView === 'profile' ? 'var(--color-primary)' : 'inherit' }} />
+              <span className="nav-text">Profile</span>
+            </button>
           </nav>
         </div>
       </header>
@@ -461,15 +532,6 @@ export default function App() {
             onStartSession={handleStartSession} 
             activeSession={activeSession}
             onNavigate={setCurrentView}
-            googleClientId={googleClientId}
-            googleAccessToken={googleAccessToken}
-            googleUser={googleUser}
-            googleSpreadsheetId={googleSpreadsheetId}
-            syncStatus={syncStatus}
-            syncMessage={syncMessage}
-            onConnectGoogle={handleConnectGoogle}
-            onManualSync={handleManualSync}
-            onDisconnectGoogle={handleDisconnectGoogle}
           />
         )}
 
@@ -480,6 +542,7 @@ export default function App() {
             onUndoShot={handleUndoShot}
             onFinishSession={handleFinishSession}
             onDiscardSession={handleDiscardSession}
+            activeClubs={activeClubs}
           />
         )}
 
@@ -494,6 +557,28 @@ export default function App() {
         {currentView === 'coach' && (
           <SwingCoach 
             sessions={sessions}
+          />
+        )}
+
+        {currentView === 'profile' && (
+          <Profile 
+            googleClientId={googleClientId}
+            googleAccessToken={googleAccessToken}
+            googleUser={googleUser}
+            googleSpreadsheetId={googleSpreadsheetId}
+            syncStatus={syncStatus}
+            syncMessage={syncMessage}
+            onConnectGoogle={handleConnectGoogle}
+            onManualSync={handleManualSync}
+            onDisconnectGoogle={handleDisconnectGoogle}
+            golferName={golferName}
+            setGolferName={handleSetGolferName}
+            handicap={handicap}
+            setHandicap={handleSetHandicap}
+            homeCourse={homeCourse}
+            setHomeCourse={handleSetHomeCourse}
+            activeClubs={activeClubs}
+            setActiveClubs={handleSetActiveClubs}
           />
         )}
       </main>

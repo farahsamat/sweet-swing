@@ -6,7 +6,12 @@ export default function SessionLogger({
   onLogShot, 
   onUndoShot, 
   onFinishSession, 
-  onDiscardSession 
+  onDiscardSession,
+  activeClubs = [
+    'Driver', '3-Wood', '5-Hybrid', '6-Hybrid', 
+    '7-Iron', '8-Iron', '9-Iron', 
+    'PW', 'SW', 'Putter'
+  ]
 }) {
   const [selectedContact, setSelectedContact] = useState(null);
   const [selectedFlight, setSelectedFlight] = useState(null);
@@ -17,12 +22,6 @@ export default function SessionLogger({
   const [sessionNotes, setSessionNotes] = useState('');
   const [sessionRating, setSessionRating] = useState(4);
 
-  // Available options
-  const CLUBS = [
-    'Driver', '3-Wood', '5-Hybrid', '6-Hybrid', 
-    '7-Iron', '8-Iron', '9-Iron', 
-    'PW', 'SW', 'Putter'
-  ];
 
   const CONTACTS = [
     { label: 'Pure ✨', value: 'Pure', desc: 'Sweetspot contact', colorClass: 'active-pure' },
@@ -143,7 +142,7 @@ export default function SessionLogger({
               1. Selected Club
             </h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {CLUBS.map(clubName => (
+              {activeClubs.map(clubName => (
                 <button
                   key={clubName}
                   className={`btn btn-secondary ${activeSession.currentClub === clubName ? 'active' : ''}`}
