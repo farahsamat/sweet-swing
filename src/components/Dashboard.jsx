@@ -33,15 +33,18 @@ export default function Dashboard({ sessions, onStartSession, activeSession, onN
     }
   });
 
-  // Calculate flight distribution for the SVG visualizer
-  const flightCounts = allShots.reduce((acc, shot) => {
+  // Calculate flight distribution for the SVG visualizer (excluding shanks/misses)
+  const nonShankShots = allShots.filter(s => s.contact !== 'Shank/Miss');
+  const totalNonShankShots = nonShankShots.length;
+
+  const flightCounts = nonShankShots.reduce((acc, shot) => {
     acc[shot.flight] = (acc[shot.flight] || 0) + 1;
     return acc;
   }, {});
 
   const getFlightPercentage = (flightType) => {
-    if (totalShots === 0) return 0;
-    return Math.round(((flightCounts[flightType] || 0) / totalShots) * 100);
+    if (totalNonShankShots === 0) return 0;
+    return Math.round(((flightCounts[flightType] || 0) / totalNonShankShots) * 100);
   };
 
   const flights = {

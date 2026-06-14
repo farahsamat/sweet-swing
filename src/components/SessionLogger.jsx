@@ -51,6 +51,13 @@ export default function SessionLogger({
   // Shot logging triggers
   const handleSelectContact = (contactVal) => {
     setSelectedContact(contactVal);
+    
+    // Auto-log shanks with a hard right 'Push' flight
+    if (contactVal === 'Shank/Miss') {
+      triggerLogShot(contactVal, 'Push');
+      return;
+    }
+
     // If flight is already selected, log immediately
     if (selectedFlight) {
       triggerLogShot(contactVal, selectedFlight);

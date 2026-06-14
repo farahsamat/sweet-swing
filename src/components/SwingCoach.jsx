@@ -11,9 +11,11 @@ export default function SwingCoach({ sessions }) {
     return acc;
   }, {});
 
-  // Track flight counts to diagnose major curve shape
+  // Track flight counts to diagnose major curve shape (excluding shanks)
   const flightCounts = allShots.reduce((acc, s) => {
-    if (s.flight !== 'Straight') acc[s.flight] = (acc[s.flight] || 0) + 1;
+    if (s.contact !== 'Shank/Miss' && s.flight !== 'Straight') {
+      acc[s.flight] = (acc[s.flight] || 0) + 1;
+    }
     return acc;
   }, {});
 
