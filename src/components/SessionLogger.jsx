@@ -19,9 +19,9 @@ export default function SessionLogger({
 
   // Available options
   const CLUBS = [
-    'Driver', '3-Wood', '5-Wood', 
-    '3-Iron', '4-Iron', '5-Iron', '6-Iron', '7-Iron', '8-Iron', '9-Iron', 
-    'PW', 'GW', 'SW', 'LW'
+    'Driver', '3-Wood', '5-Hybrid', '6-Hybrid', 
+    '7-Iron', '8-Iron', '9-Iron', 
+    'PW', 'SW', 'Putter'
   ];
 
   const CONTACTS = [
