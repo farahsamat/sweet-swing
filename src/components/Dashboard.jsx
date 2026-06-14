@@ -148,9 +148,9 @@ export default function Dashboard({ sessions, onStartSession, activeSession, onN
                 <line x1="150" y1="10" x2="150" y2="290" stroke="rgba(148, 163, 184, 0.1)" strokeWidth="1" />
 
                 {/* Range Markers */}
-                <text x="150" y="25" fill="var(--text-muted)" fontSize="8" textAnchor="middle">250y</text>
-                <text x="150" y="65" fill="var(--text-muted)" fontSize="8" textAnchor="middle">200y</text>
-                <text x="150" y="105" fill="var(--text-muted)" fontSize="8" textAnchor="middle">150y</text>
+                <text x="150" y="25" fill="var(--text-muted)" fontSize="8" textAnchor="middle">200m</text>
+                <text x="150" y="65" fill="var(--text-muted)" fontSize="8" textAnchor="middle">150m</text>
+                <text x="150" y="105" fill="var(--text-muted)" fontSize="8" textAnchor="middle">100m</text>
 
                 {/* Trajectory lines starting from bottom tee (150, 270) */}
                 {/* Tee position */}
