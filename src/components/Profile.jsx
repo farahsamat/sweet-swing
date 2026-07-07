@@ -20,8 +20,30 @@ export default function Profile({
   homeCourse,
   setHomeCourse,
   activeClubs,
-  setActiveClubs
+  setActiveClubs,
+  clubDistances = {},
+  setClubDistances,
+  sessions = []
 }) {
+  // Calculate average actual distances from "Pure" shots in sessions
+  const allShots = sessions.flatMap(s => s.shots || []);
+  const pureDistanceStats = allShots.reduce((acc, shot) => {
+    if (shot.contact === 'Pure' && shot.distance) {
+      if (!acc[shot.club]) {
+        acc[shot.club] = { totalDist: 0, count: 0 };
+      }
+      acc[shot.club].totalDist += shot.distance;
+      acc[shot.club].count += 1;
+    }
+    return acc;
+  }, {});
+
+  const getRealClubAverage = (clubName) => {
+    const stats = pureDistanceStats[clubName];
+    if (!stats || stats.count === 0) return null;
+    return Math.round(stats.totalDist / stats.count);
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState(golferName || 'Golfer');
   const [tempHandicap, setTempHandicap] = useState(handicap || '28.0');
@@ -97,6 +119,9 @@ export default function Profile({
       return;
     }
     setActiveClubs([...activeClubs, cleanName]);
+    if (setClubDistances) {
+      setClubDistances({ ...clubDistances, [cleanName]: 100 });
+    }
     setCustomClubName('');
   };
 
@@ -431,6 +456,26 @@ export default function Profile({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <GripVertical size={14} style={{ color: 'var(--text-muted)', cursor: 'grab' }} />
                           <span style={{ fontWeight: 500 }}>{club}</span>
+                          <input 
+                            type="number"
+                            value={clubDistances[club] || 100}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value) || 0;
+                              setClubDistances({ ...clubDistances, [club]: val });
+                            }}
+                            style={{
+                              width: '55px',
+                              background: 'rgba(0,0,0,0.3)',
+                              border: '1px solid var(--border-slate)',
+                              borderRadius: '4px',
+                              color: 'white',
+                              fontSize: '0.75rem',
+                              padding: '2px 4px',
+                              textAlign: 'center',
+                              marginLeft: '8px'
+                            }}
+                          />
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>yds</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <button
@@ -526,12 +571,76 @@ export default function Profile({
                       }}
                     >
                       <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'white' }}>{clubName}</span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{spec}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                        {spec} &bull; {clubDistances[clubName] || 100} yds
+                      </span>
                     </div>
                   );
                 })}
               </div>
             )}
+          </div>
+
+          {/* Club Average Yardage Matrix Card */}
+          <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={18} style={{ color: 'var(--color-primary)' }} />
+              Club Average Yardage Matrix
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: '1.4' }}>
+              Compares your estimated **Target Distance** against your real average **Pure Contact carry distance** recorded during range practice.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px' }}>
+              {/* Matrix Table Headers */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 2fr', gap: '8px', paddingBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
+                <span>Club</span>
+                <span style={{ textAlign: 'center' }}>Target</span>
+                <span style={{ textAlign: 'center' }}>Real Pure</span>
+                <span style={{ textAlign: 'left', paddingLeft: '10px' }}>Real vs Target</span>
+              </div>
+
+              {/* Clubs List */}
+              {activeClubs.map(club => {
+                const target = clubDistances[club] || 100;
+                const real = getRealClubAverage(club);
+                const pct = real ? Math.round((real / target) * 100) : 0;
+                const diff = real ? real - target : null;
+                const diffDisplay = diff !== null ? (diff >= 0 ? `+${diff} yds` : `${diff} yds`) : 'No data';
+                const diffColor = diff !== null ? (diff >= 0 ? 'var(--color-primary)' : 'var(--color-danger)') : 'var(--text-muted)';
+                
+                return (
+                  <div key={club} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 2fr', gap: '8px', alignItems: 'center', fontSize: '0.85rem' }}>
+                    <span style={{ fontWeight: 'bold', color: 'white' }}>{club}</span>
+                    <span style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{target} yds</span>
+                    <span style={{ textAlign: 'center', color: real ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: real ? 700 : 'normal' }}>
+                      {real ? `${real} yds` : '-'}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '10px' }}>
+                      {real ? (
+                        <>
+                          <div style={{ flexGrow: 1, height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden', minWidth: '40px' }}>
+                            <div 
+                              style={{ 
+                                width: `${Math.min(100, pct)}%`, 
+                                height: '100%', 
+                                background: diff >= 0 ? 'var(--grad-emerald)' : 'linear-gradient(135deg, #ef4444 0%, #f59e0b 100%)', 
+                                borderRadius: '3px' 
+                              }}
+                            ></div>
+                          </div>
+                          <span style={{ fontSize: '0.72rem', color: diffColor, fontWeight: 600, minWidth: '45px', textAlign: 'right' }}>
+                            {diffDisplay}
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Log pure range shots</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
         </div>

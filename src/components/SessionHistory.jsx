@@ -54,11 +54,15 @@ export default function SessionHistory({ sessions, onDeleteSession, onStartSessi
             // Calculate club stats in this session
             const clubStats = shots.reduce((acc, shot) => {
               if (!acc[shot.club]) {
-                acc[shot.club] = { total: 0, pure: 0 };
+                acc[shot.club] = { total: 0, pure: 0, distTotal: 0, distCount: 0 };
               }
               acc[shot.club].total += 1;
               if (shot.contact === 'Pure') {
                 acc[shot.club].pure += 1;
+              }
+              if (shot.distance) {
+                acc[shot.club].distTotal += shot.distance;
+                acc[shot.club].distCount += 1;
               }
               return acc;
             }, {});
@@ -150,10 +154,13 @@ export default function SessionHistory({ sessions, onDeleteSession, onStartSessi
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {Object.entries(clubStats).map(([club, stat]) => {
                             const pct = Math.round((stat.pure / stat.total) * 100);
+                            const avgDist = stat.distCount > 0 ? Math.round(stat.distTotal / stat.distCount) : null;
                             return (
                               <div key={club} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                                  <span style={{ fontWeight: 600 }}>{club} ({stat.total} hits)</span>
+                                  <span style={{ fontWeight: 600 }}>
+                                    {club} ({stat.total} hits){avgDist ? ` • Avg ${avgDist} yds` : ''}
+                                  </span>
                                   <span style={{ color: pct > 65 ? 'var(--color-primary)' : 'var(--text-secondary)' }}>{pct}% Pure</span>
                                 </div>
                                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>

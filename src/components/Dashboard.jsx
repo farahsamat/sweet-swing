@@ -5,7 +5,9 @@ export default function Dashboard({
   sessions, 
   onStartSession, 
   activeSession, 
-  onNavigate
+  onNavigate,
+  rounds = [],
+  activeRound
 }) {
 
   // Aggregate statistics
@@ -39,6 +41,95 @@ export default function Dashboard({
     }
   });
 
+  // On-Course statistics
+  const totalRounds = rounds.length;
+  let avgStrokesDiff = 0;
+  let avgPuttsPerRound = 0;
+  let avgGirPct = 0;
+  let avgFwPct = 0;
+  
+  if (totalRounds > 0) {
+    let totalDiff = 0;
+    let totalPutts = 0;
+    let totalHoles = 0;
+    let totalGir = 0;
+    let totalFwHoles = 0;
+    let totalFwHits = 0;
+
+    rounds.forEach(r => {
+      const rPar = r.holes.reduce((s, h) => s + h.par, 0);
+      const rScore = r.holes.reduce((s, h) => s + (h.score || 0), 0);
+      totalDiff += (rScore - rPar);
+
+      r.holes.forEach(h => {
+        totalHoles += 1;
+        totalPutts += h.putts || 0;
+        if (h.gir) totalGir += 1;
+
+        if (h.par > 3) {
+          totalFwHoles += 1;
+          if (h.fairway === 'Hit') totalFwHits += 1;
+        }
+      });
+    });
+
+    avgStrokesDiff = Math.round(totalDiff / totalRounds);
+    avgPuttsPerRound = (totalPutts / totalHoles).toFixed(1);
+    avgGirPct = Math.round((totalGir / totalHoles) * 100);
+    avgFwPct = totalFwHoles > 0 ? Math.round((totalFwHits / totalFwHoles) * 100) : 0;
+  }
+
+  const avgStrokesDiffDisplay = totalRounds > 0 ? (avgStrokesDiff >= 0 ? `+${avgStrokesDiff}` : avgStrokesDiff) : '-';
+  const avgPuttsPerRoundDisplay = totalRounds > 0 ? avgPuttsPerRound : '-';
+  const avgGirPctDisplay = totalRounds > 0 ? `${avgGirPct}%` : '-%';
+  const avgFwPctDisplay = totalRounds > 0 ? `${avgFwPct}%` : '-%';
+
+  // Range flight patterns
+  const rangeRightMisses = allShots.filter(s => s.flight === 'Slice' || s.flight === 'Push').length;
+  const rangeLeftMisses = allShots.filter(s => s.flight === 'Hook' || s.flight === 'Pull').length;
+  
+  // On-course fairway misses
+  let onCourseMissRight = 0;
+  let onCourseMissLeft = 0;
+  let totalOnCourseFwMisses = 0;
+
+  if (totalRounds > 0) {
+    rounds.forEach(r => {
+      r.holes.forEach(h => {
+        if (h.par > 3) {
+          if (h.fairway === 'Right') {
+            onCourseMissRight += 1;
+            totalOnCourseFwMisses += 1;
+          } else if (h.fairway === 'Left') {
+            onCourseMissLeft += 1;
+            totalOnCourseFwMisses += 1;
+          }
+        }
+      });
+    });
+  }
+
+  // Correlation Diagnostic
+  let correlationTip = null;
+  if (totalShots > 10 && totalOnCourseFwMisses > 3) {
+    const rangeRightPct = Math.round((rangeRightMisses / totalShots) * 100);
+    const rangeLeftPct = Math.round((rangeLeftMisses / totalShots) * 100);
+    const courseRightPct = Math.round((onCourseMissRight / totalOnCourseFwMisses) * 100);
+    const courseLeftPct = Math.round((onCourseMissLeft / totalOnCourseFwMisses) * 100);
+
+    if (rangeRightPct > 15 && courseRightPct > 45) {
+      correlationTip = {
+        type: 'Slice/Push Right',
+        message: `On the range, you miss ${rangeRightPct}% of shots to the Right. On the course, you missed ${courseRightPct}% of fairways to the Right. Your range tendency matches your on-course misses! Try the 'Headcover Armpit Drill' to keep your trail elbow tucked and eliminate the outside-in slice path.`
+      };
+    } else if (rangeLeftPct > 15 && courseLeftPct > 45) {
+      correlationTip = {
+        type: 'Hook/Pull Left',
+        message: `On the range, you miss ${rangeLeftPct}% of shots to the Left. On the course, you missed ${courseLeftPct}% of fairways to the Left. Your range tendency matches your on-course misses! Focus on the 'Hips Open at Impact Drill' to prevent rolling your wrists early.`
+      };
+    }
+  }
+
   // Calculate flight distribution for the SVG visualizer (excluding shanks/misses)
   const nonShankShots = allShots.filter(s => s.contact !== 'Shank/Miss');
   const totalNonShankShots = nonShankShots.length;
@@ -66,37 +157,14 @@ export default function Dashboard({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       
-      {/* Welcome & Quick Action */}
-      <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', padding: '30px' }}>
-        <div>
-          <h1 style={{ fontSize: '2.2rem', marginBottom: '8px', fontFamily: 'var(--font-display)', fontWeight: 800 }}>
-            Practice Smart, Hit Purer
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '600px', fontSize: '1rem', lineHeight: '1.5' }}>
-            Track your swing contact feel and ball flight directions. Sweet Swing will automatically calculate your sweet-spot hit percentage and diagnose swing errors.
-          </p>
-        </div>
-        <div>
-          {activeSession ? (
-            <button 
-              className="btn btn-primary"
-              style={{ padding: '14px 28px', fontSize: '1rem', animation: 'pulseGlow 2s infinite' }}
-              onClick={() => onNavigate('active-session')}
-            >
-              <Activity size={18} />
-              Resume Active Session
-            </button>
-          ) : (
-            <button 
-              className="btn btn-primary"
-              style={{ padding: '14px 28px', fontSize: '1rem' }}
-              onClick={onStartSession}
-            >
-              <Play size={18} fill="currentColor" />
-              Start Range Session
-            </button>
-          )}
-        </div>
+      {/* Welcome Header */}
+      <div className="glass-panel" style={{ padding: '30px' }}>
+        <h1 style={{ fontSize: '2rem', marginBottom: '8px', fontFamily: 'var(--font-display)', fontWeight: 800 }}>
+          Sweet Swing Dashboard
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: '800px', fontSize: '0.95rem', lineHeight: '1.5' }}>
+          Your central golf analytics dashboard. View driving range consistency, on-course scorecards, club yardage progress, and personalized swing coaching diagnostics. Choose tabs in the header to start a range session or scorecard.
+        </p>
       </div>
 
       {/* Stats Summary Grid */}
@@ -126,6 +194,41 @@ export default function Dashboard({
           <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Primary Club</span>
           <span className="stat-val-huge" style={{ fontSize: '2rem' }}>{topClub}</span>
           <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{maxClubShots > 0 ? `${maxClubShots} shots logged` : 'No shots logged yet'}</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '-12px' }}>
+        <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          On-Course Performance
+        </h3>
+        <div className="stats-card-grid">
+          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '3px solid var(--color-accent-gold)' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Rounds Played</span>
+            <span className="stat-val-huge">{totalRounds}</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{totalRounds > 0 ? 'Completed scorecards' : 'No rounds played'}</span>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '3px solid var(--color-accent-gold)' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Avg Score vs Par</span>
+            <span className="stat-val-huge" style={{ color: totalRounds > 0 ? (avgStrokesDiff > 0 ? 'var(--color-danger)' : 'var(--color-primary)') : 'var(--text-primary)' }}>
+              {avgStrokesDiffDisplay}
+            </span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Relative to par average</span>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '3px solid var(--color-accent-gold)' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Putts / Hole</span>
+            <span className="stat-val-huge">{avgPuttsPerRoundDisplay}</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Average short game strokes</span>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '3px solid var(--color-accent-gold)' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>GIR % / Fairway %</span>
+            <span className="stat-val-huge" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
+              <span style={{ color: totalRounds > 0 ? 'var(--color-primary)' : 'var(--text-muted)' }}>{avgGirPctDisplay}</span> / <span style={{ color: totalRounds > 0 ? 'var(--color-info)' : 'var(--text-muted)' }}>{avgFwPctDisplay}</span>
+            </span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Accuracy ratios</span>
+          </div>
         </div>
       </div>
 
@@ -342,65 +445,26 @@ export default function Dashboard({
             )}
           </div>
 
-          {/* Recent Sessions list */}
-          <div className="glass-panel" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '1.2rem' }}>Recent Range Visits</h3>
-            
-            {sessions.length === 0 ? (
-              <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', padding: '20px 0' }}>
-                No completed sessions found
+          {/* Range-to-Course Correlation Box */}
+          {correlationTip && (
+            <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderLeft: '4px solid var(--color-info)', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(10, 18, 14, 0.8) 100%)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.1rem', color: 'white', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-display)', fontWeight: 'bold' }}>
+                  🎯 Range-to-Course Correlation
+                </span>
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {sessions.slice(0, 3).map((session) => {
-                  const sShots = session.shots || [];
-                  const sPure = sShots.filter(s => s.contact === 'Pure').length;
-                  const sPercentage = sShots.length > 0 ? Math.round((sPure / sShots.length) * 100) : 0;
-                  
-                  return (
-                    <div 
-                      key={session.id}
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between', 
-                        padding: '12px', 
-                        background: 'rgba(255,255,255,0.02)', 
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        borderRadius: '10px'
-                      }}
-                    >
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{session.date}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {sShots.length} shots &bull; {sPercentage}% pure
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {/* Session Stars */}
-                        <div style={{ color: 'var(--color-accent-gold)', fontSize: '0.9rem' }}>
-                          {'★'.repeat(session.rating)}{'☆'.repeat(5 - session.rating)}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {sessions.length > 3 && (
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ fontSize: '0.8rem', padding: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}
-                    onClick={() => onNavigate('history')}
-                  >
-                    View All Sessions History
-                    <ChevronRight size={14} />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-
-
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                {correlationTip.message}
+              </p>
+              <button 
+                className="btn btn-secondary" 
+                style={{ alignSelf: 'flex-start', padding: '6px 12px', fontSize: '0.8rem' }}
+                onClick={() => onNavigate('coach')}
+              >
+                View Recommended Drill
+              </button>
+            </div>
+          )}
           </div>
         </div>
       </div>

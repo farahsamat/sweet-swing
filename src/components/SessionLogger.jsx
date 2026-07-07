@@ -11,12 +11,22 @@ export default function SessionLogger({
     'Driver', '3-Wood', '5-Hybrid', '6-Hybrid', 
     '7-Iron', '8-Iron', '9-Iron', 
     'PW', 'SW', 'Putter'
-  ]
+  ],
+  clubDistances = {}
 }) {
   const [selectedContact, setSelectedContact] = useState(null);
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [selectedCues, setSelectedCues] = useState([]);
   
+  // Track carry distance of the shot
+  const currentClub = activeSession.currentClub;
+  const [shotDistance, setShotDistance] = useState(clubDistances[currentClub] || 100);
+
+  // Sync distance when the club changes
+  React.useEffect(() => {
+    setShotDistance(clubDistances[currentClub] || 100);
+  }, [currentClub, clubDistances]);
+
   // Finish session states
   const [isFinishing, setIsFinishing] = useState(false);
   const [sessionNotes, setSessionNotes] = useState('');
@@ -76,7 +86,8 @@ export default function SessionLogger({
       club: activeSession.currentClub,
       contact: contact,
       flight: flight,
-      cues: [...selectedCues]
+      cues: [...selectedCues],
+      distance: shotDistance
     });
     
     // Reset selection for next shot
@@ -215,6 +226,60 @@ export default function SessionLogger({
                 </div>
               </div>
 
+              {/* Carry Distance Selector */}
+              <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '16px' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                  Estimated Carry Distance:
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', maxWidth: '350px' }}>
+                  <button 
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '6px 12px', fontSize: '0.85rem', minWidth: '40px', fontWeight: 'bold' }}
+                    onClick={() => setShotDistance(Math.max(0, shotDistance - 10))}
+                  >
+                    -10
+                  </button>
+                  <button 
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '6px 8px', fontSize: '0.8rem', minWidth: '32px' }}
+                    onClick={() => setShotDistance(Math.max(0, shotDistance - 5))}
+                  >
+                    -5
+                  </button>
+                  <div style={{ 
+                    flexGrow: 1, 
+                    textAlign: 'center', 
+                    background: 'rgba(0, 0, 0, 0.25)', 
+                    border: '1px solid var(--border-slate)', 
+                    padding: '6px', 
+                    borderRadius: '8px',
+                    fontSize: '1.05rem',
+                    fontWeight: 800,
+                    color: 'var(--color-primary)'
+                  }}>
+                    {shotDistance} <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: 'var(--text-secondary)' }}>yds</span>
+                  </div>
+                  <button 
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '6px 8px', fontSize: '0.8rem', minWidth: '32px' }}
+                    onClick={() => setShotDistance(shotDistance + 5)}
+                  >
+                    +5
+                  </button>
+                  <button 
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '6px 12px', fontSize: '0.85rem', minWidth: '40px', fontWeight: 'bold' }}
+                    onClick={() => setShotDistance(shotDistance + 10)}
+                  >
+                    +10
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -303,7 +368,7 @@ export default function SessionLogger({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{shot.club}</span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        {shot.flight}
+                        {shot.flight} {shot.distance ? `&bull; ${shot.distance} yds` : ''}
                       </span>
                     </div>
                     <div>

@@ -450,3 +450,22 @@ h1, h2, h3, h4, h5, h6 {
 .spin-animation {
   animation: spin 1.5s linear infinite;
 }
+
+/* Play Mode Premium Scorecard Styles */
+.scorecard-header-active {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--color-primary);
+  border-radius: 4px;
+}
+
+@keyframes pulseGold {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+  }
+}
+.active-round-glow {
+  animation: pulseGold 2s infinite ease-in-out;
+}

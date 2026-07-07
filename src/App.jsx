@@ -4,7 +4,9 @@ import SessionLogger from './components/SessionLogger.jsx';
 import SwingCoach from './components/SwingCoach.jsx';
 import SessionHistory from './components/SessionHistory.jsx';
 import Profile from './components/Profile.jsx';
-import { History, Activity, Dumbbell, User } from 'lucide-react';
+import PlayMode from './components/PlayMode.jsx';
+import RangeMode from './components/RangeMode.jsx';
+import { History, Activity, Dumbbell, User, Trophy, Target } from 'lucide-react';
 import { 
   searchLogbookFile, 
   createLogbookFile, 
@@ -17,6 +19,11 @@ export default function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [sessions, setSessions] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
+  
+  // On-Course Rounds States
+  const [rounds, setRounds] = useState([]);
+  const [activeRound, setActiveRound] = useState(null);
+  const [customCourses, setCustomCourses] = useState([]);
 
   // Google Sync States
   const [googleClientId, setGoogleClientId] = useState('');
@@ -35,6 +42,12 @@ export default function App() {
     '7-Iron', '8-Iron', '9-Iron', 
     'PW', 'SW', 'Putter'
   ]);
+  const [clubDistances, setClubDistances] = useState({
+    'Driver': 230, '3-Wood': 210, '5-Wood': 190, '7-Wood': 180,
+    '3-Hybrid': 200, '4-Hybrid': 190, '5-Hybrid': 180, '6-Hybrid': 170,
+    '4-Iron': 180, '5-Iron': 170, '6-Iron': 160, '7-Iron': 150, '8-Iron': 140, '9-Iron': 130,
+    'PW': 115, 'AW': 105, 'GW': 100, 'SW': 90, 'LW': 80, 'Putter': 15
+  });
 
   // Load initial data from localStorage
   useEffect(() => {
@@ -85,6 +98,42 @@ export default function App() {
           console.error('Failed to parse active clubs:', err);
         }
       }
+      const storedDistances = localStorage.getItem('sweetswing_club_distances');
+      if (storedDistances) {
+        try {
+          setClubDistances(JSON.parse(storedDistances));
+        } catch (err) {
+          console.error('Failed to parse club distances:', err);
+        }
+      }
+
+      // Load On-Course rounds details
+      const storedRounds = localStorage.getItem('sweetswing_rounds');
+      if (storedRounds) {
+        try {
+          setRounds(JSON.parse(storedRounds));
+        } catch (err) {
+          console.error('Failed to parse rounds:', err);
+        }
+      }
+
+      const storedCustomCourses = localStorage.getItem('sweetswing_custom_courses');
+      if (storedCustomCourses) {
+        try {
+          setCustomCourses(JSON.parse(storedCustomCourses));
+        } catch (err) {
+          console.error('Failed to parse custom courses:', err);
+        }
+      }
+      const storedActiveRound = localStorage.getItem('sweetswing_active_round');
+      if (storedActiveRound) {
+        try {
+          setActiveRound(JSON.parse(storedActiveRound));
+          setCurrentView('play-mode'); // Resume active round
+        } catch (err) {
+          console.error('Failed to parse active round:', err);
+        }
+      }
     } catch (e) {
       console.error('Failed to load localStorage data:', e);
     }
@@ -103,6 +152,99 @@ export default function App() {
       localStorage.setItem('sweetswing_active_session', JSON.stringify(updatedActive));
     } else {
       localStorage.removeItem('sweetswing_active_session');
+    }
+  };
+
+  // Sync rounds to localStorage
+  const saveRounds = (updatedRounds) => {
+    setRounds(updatedRounds);
+    localStorage.setItem('sweetswing_rounds', JSON.stringify(updatedRounds));
+  };
+
+  // Sync active round to localStorage
+  const updateActiveRound = (updatedActive) => {
+    setActiveRound(updatedActive);
+    if (updatedActive) {
+      localStorage.setItem('sweetswing_active_round', JSON.stringify(updatedActive));
+    } else {
+      localStorage.removeItem('sweetswing_active_round');
+    }
+  };
+
+  // Play Mode round handlers
+  const handleStartRound = (courseName, numHoles, coursePars = null) => {
+    const holes = Array.from({ length: numHoles }, (_, i) => {
+      const par = (coursePars && coursePars.length > 0) ? coursePars[i % coursePars.length] : 4;
+      return {
+        holeNum: i + 1,
+        par: par,
+        score: par,
+        putts: 2,
+        fairway: 'Hit',
+        gir: true
+      };
+    });
+    const newRound = {
+      id: Date.now(),
+      course: courseName,
+      date: new Date().toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }),
+      numHoles: numHoles,
+      holes: holes
+    };
+    updateActiveRound(newRound);
+  };
+
+  const handleLogHole = (holeIdx, updatedHole) => {
+    if (!activeRound) return;
+    const updatedHoles = [...activeRound.holes];
+    updatedHoles[holeIdx] = updatedHole;
+    const updatedActive = {
+      ...activeRound,
+      holes: updatedHoles
+    };
+    updateActiveRound(updatedActive);
+  };
+
+  const handleFinishRound = () => {
+    if (!activeRound) return;
+    const completedRound = {
+      ...activeRound,
+      endTime: new Date().toISOString()
+    };
+    const updatedRounds = [completedRound, ...rounds];
+    saveRounds(updatedRounds);
+    updateActiveRound(null);
+  };
+
+  const handleDiscardRound = () => {
+    if (window.confirm('Are you sure you want to discard this round? Your scores will not be saved.')) {
+      updateActiveRound(null);
+    }
+  };
+
+  const handleDeleteRound = (roundId) => {
+    if (window.confirm('Are you sure you want to delete this round from history?')) {
+      const updated = rounds.filter(r => r.id !== roundId);
+      saveRounds(updated);
+    }
+  };
+
+  const handleSaveCustomCourse = (course) => {
+    const updated = [course, ...customCourses.filter(c => c.id !== course.id)];
+    setCustomCourses(updated);
+    localStorage.setItem('sweetswing_custom_courses', JSON.stringify(updated));
+  };
+
+  const handleDeleteCustomCourse = (id) => {
+    if (window.confirm('Are you sure you want to delete this custom course template?')) {
+      const updated = customCourses.filter(c => c.id !== id);
+      setCustomCourses(updated);
+      localStorage.setItem('sweetswing_custom_courses', JSON.stringify(updated));
     }
   };
 
@@ -125,6 +267,11 @@ export default function App() {
   const handleSetActiveClubs = (clubs) => {
     setActiveClubs(clubs);
     localStorage.setItem('sweetswing_active_clubs', JSON.stringify(clubs));
+  };
+
+  const handleSetClubDistances = (distances) => {
+    setClubDistances(distances);
+    localStorage.setItem('sweetswing_club_distances', JSON.stringify(distances));
   };
 
   // Start new practice session
@@ -433,7 +580,7 @@ export default function App() {
             className="brand cursor-pointer"
             onClick={() => setCurrentView(activeSession ? 'active-session' : 'dashboard')}
           >
-            Sweet Swing <span>// Range Assistant</span>
+            Sweet Swing <span>// Golf Companion</span>
           </div>
 
           <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -474,19 +621,35 @@ export default function App() {
             )}
 
             <button 
-              className={`btn btn-secondary ${currentView === 'history' ? 'active' : ''}`}
+              className={`btn btn-secondary ${currentView === 'range-mode' ? 'active' : ''}`}
               style={{ 
                 padding: '6px 12px', 
                 fontSize: '0.85rem', 
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '6px',
-                borderColor: currentView === 'history' ? 'var(--color-primary)' : 'var(--border-slate)'
+                borderColor: currentView === 'range-mode' ? 'var(--color-primary)' : 'var(--border-slate)'
               }}
-              onClick={() => setCurrentView('history')}
+              onClick={() => setCurrentView('range-mode')}
             >
-              <History size={14} style={{ color: currentView === 'history' ? 'var(--color-primary)' : 'inherit' }} />
-              <span className="nav-text">History</span>
+              <Target size={14} style={{ color: currentView === 'range-mode' ? 'var(--color-primary)' : 'inherit' }} />
+              <span className="nav-text">Range Mode</span>
+            </button>
+
+            <button 
+              className={`btn btn-secondary ${currentView === 'play-mode' ? 'active' : ''}`}
+              style={{ 
+                padding: '6px 12px', 
+                fontSize: '0.85rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                borderColor: currentView === 'play-mode' ? 'var(--color-primary)' : 'var(--border-slate)'
+              }}
+              onClick={() => setCurrentView('play-mode')}
+            >
+              <Trophy size={14} style={{ color: currentView === 'play-mode' ? 'var(--color-primary)' : 'inherit' }} />
+              <span className="nav-text">Play Mode</span>
             </button>
 
             <button 
@@ -532,6 +695,8 @@ export default function App() {
             onStartSession={handleStartSession} 
             activeSession={activeSession}
             onNavigate={setCurrentView}
+            rounds={rounds}
+            activeRound={activeRound}
           />
         )}
 
@@ -543,14 +708,32 @@ export default function App() {
             onFinishSession={handleFinishSession}
             onDiscardSession={handleDiscardSession}
             activeClubs={activeClubs}
+            clubDistances={clubDistances}
           />
         )}
 
-        {currentView === 'history' && (
-          <SessionHistory 
-            sessions={sessions} 
-            onDeleteSession={handleDeleteSession}
+        {currentView === 'play-mode' && (
+          <PlayMode 
+            rounds={rounds}
+            activeRound={activeRound}
+            onStartRound={handleStartRound}
+            onLogHole={handleLogHole}
+            onFinishRound={handleFinishRound}
+            onDiscardRound={handleDiscardRound}
+            onDeleteRound={handleDeleteRound}
+            customCourses={customCourses}
+            onSaveCustomCourse={handleSaveCustomCourse}
+            onDeleteCustomCourse={handleDeleteCustomCourse}
+          />
+        )}
+
+        {currentView === 'range-mode' && (
+          <RangeMode 
+            sessions={sessions}
+            activeSession={activeSession}
             onStartSession={handleStartSession}
+            onDeleteSession={handleDeleteSession}
+            onNavigate={setCurrentView}
           />
         )}
 
@@ -579,6 +762,9 @@ export default function App() {
             setHomeCourse={handleSetHomeCourse}
             activeClubs={activeClubs}
             setActiveClubs={handleSetActiveClubs}
+            clubDistances={clubDistances}
+            setClubDistances={handleSetClubDistances}
+            sessions={sessions}
           />
         )}
       </main>
